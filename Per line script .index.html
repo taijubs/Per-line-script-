@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Script Name Extractor</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #121212;
+            color: #e0e0e0;
+            display: flex;
+            justify-content: center;
+            padding: 20px;
+        }
+        .container {
+            width: 100%;
+            max-width: 800px;
+            background: #1e1e1e;
+            padding: 25px;
+            border-radius: 12px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+        }
+        h2 { text-align: center; color: #00ff88; }
+        .input-group { margin-bottom: 20px; }
+        label { display: block; margin-bottom: 8px; font-weight: bold; }
+        textarea {
+            width: 100%;
+            height: 200px;
+            background: #2d2d2d;
+            border: 1px solid #444;
+            color: #fff;
+            padding: 10px;
+            border-radius: 6px;
+            resize: vertical;
+            box-sizing: border-box;
+        }
+        .controls {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+        }
+        button {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: 0.3s;
+        }
+        .btn-primary { background: #00ff88; color: #000; }
+        .btn-primary:hover { background: #00cc6e; }
+        .btn-copy { background: #3498db; color: #fff; }
+        .btn-copy:hover { background: #2980b9; }
+        .btn-clear { background: #e74c3c; color: #fff; }
+        input[type="file"] {
+            background: #2d2d2d;
+            padding: 8px;
+            border-radius: 5px;
+            border: 1px solid #444;
+            color: #ccc;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h2>Script Name Extractor</h2>
+    
+    <div class="input-group">
+        <label>1. Unggah File atau Paste Teks:</label>
+        <input type="file" id="fileInput" accept=".txt">
+        <textarea id="inputText" placeholder="Paste isi file script list di sini..."></textarea>
+    </div>
+
+    <div class="controls">
+        <button class="btn-primary" onclick="processText()">Ekstrak Nama Script</button>
+        <button class="btn-copy" onclick="copyResult()">Salin Hasil</button>
+        <button class="btn-clear" onclick="clearAll()">Reset</button>
+    </div>
+
+    <div class="input-group">
+        <label>2. Format Output (Hanya Nama):</label>
+        <textarea id="outputText" readonly placeholder="Hasil akan muncul di sini..."></textarea>
+    </div>
+</div>
+
+<script>
+    // Fungsi utama memproses teks
+    function processText() {
+        const input = document.getElementById('inputText').value;
+        const lines = input.split('\n');
+        let results = [];
+
+        lines.forEach(line => {
+            // Regex untuk mengambil teks di antara ] dan -->
+            // Contoh: [LocalScript] MyScript --> Workspace...
+            // Hasil: MyScript
+            const match = line.match(/\]\s*(.*?)\s*-->/);
+            
+            if (match && match[1]) {
+                const scriptName = match[1].trim();
+                if (scriptName) {
+                    results.push(scriptName);
+                }
+            }
+        });
+
+        document.getElementById('outputText').value = results.join('\n');
+    }
+
+    // Membaca file jika diunggah
+    document.getElementById('fileInput').addEventListener('change', function(e) {
+        const file = e.target.files[0];
+        if (!file) return;
+        
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            document.getElementById('inputText').value = e.target.result;
+            processText(); // Langsung proses setelah upload
+        };
+        reader.readAsText(file);
+    });
+
+    // Fungsi salin hasil
+    function copyResult() {
+        const output = document.getElementById('outputText');
+        output.select();
+        document.execCommand('copy');
+        alert('Hasil berhasil disalin ke clipboard!');
+    }
+
+    // Fungsi reset
+    function clearAll() {
+        document.getElementById('inputText').value = '';
+        document.getElementById('outputText').value = '';
+        document.getElementById('fileInput').value = '';
+    }
+</script>
+
+</body>
+</html>
+
