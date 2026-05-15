@@ -1,144 +1,234 @@
 <!DOCTYPE html>
 <html lang="id">
 <head>
-    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>📜</text></svg>">
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Script Name Extractor</title>
-    <style>
-        body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background-color: #121212;
-            color: #e0e0e0;
-            display: flex;
-            justify-content: center;
-            padding: 20px;
-        }
-        .container {
-            width: 100%;
-            max-width: 800px;
-            background: #1e1e1e;
-            padding: 25px;
-            border-radius: 12px;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
-        }
-        h2 { text-align: center; color: #00ff88; }
-        .input-group { margin-bottom: 20px; }
-        label { display: block; margin-bottom: 8px; font-weight: bold; }
-        textarea {
-            width: 100%;
-            height: 200px;
-            background: #2d2d2d;
-            border: 1px solid #444;
-            color: #fff;
-            padding: 10px;
-            border-radius: 6px;
-            resize: vertical;
-            box-sizing: border-box;
-        }
-        .controls {
-            display: flex;
-            gap: 10px;
-            margin-bottom: 20px;
-            flex-wrap: wrap;
-        }
-        button {
-            padding: 10px 20px;
-            border: none;
-            border-radius: 5px;
-            cursor: pointer;
-            font-weight: bold;
-            transition: 0.3s;
-        }
-        .btn-primary { background: #00ff88; color: #000; }
-        .btn-primary:hover { background: #00cc6e; }
-        .btn-copy { background: #3498db; color: #fff; }
-        .btn-copy:hover { background: #2980b9; }
-        .btn-clear { background: #e74c3c; color: #fff; }
-        input[type="file"] {
-            background: #2d2d2d;
-            padding: 8px;
-            border-radius: 5px;
-            border: 1px solid #444;
-            color: #ccc;
-        }
-    </style>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Ekstrak Modul require() - Lua Script</title>
+  <style>
+    :root {
+      --bg: #0f0f0f;
+      --surface: #1a1a1a;
+      --border: #333;
+      --text: #e0e0e0;
+      --accent: #007acc;
+      --green: #4ec94e;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'Segoe UI', system-ui, sans-serif;
+      display: flex;
+      justify-content: center;
+      padding: 2rem 1rem;
+      min-height: 100vh;
+    }
+    .container {
+      width: 100%;
+      max-width: 900px;
+      display: flex;
+      flex-direction: column;
+      gap: 1.5rem;
+    }
+    h1 {
+      font-size: 1.8rem;
+      color: #ffffff;
+      text-align: center;
+      margin-bottom: 0.5rem;
+    }
+    textarea {
+      width: 100%;
+      padding: 1rem;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      color: #d4d4d4;
+      font-family: 'Consolas', 'Courier New', monospace;
+      font-size: 0.9rem;
+      resize: vertical;
+      transition: border 0.2s;
+    }
+    textarea:focus {
+      outline: none;
+      border-color: var(--accent);
+    }
+    .btn-group {
+      display: flex;
+      gap: 0.8rem;
+      flex-wrap: wrap;
+    }
+    button {
+      background: var(--accent);
+      color: white;
+      border: none;
+      border-radius: 6px;
+      padding: 0.8rem 1.6rem;
+      font-size: 0.95rem;
+      font-weight: 500;
+      cursor: pointer;
+      transition: background 0.2s, transform 0.1s;
+      display: flex;
+      align-items: center;
+      gap: 0.4rem;
+    }
+    button:hover { background: #1a8cd8; }
+    button:active { transform: scale(0.98); }
+    button.secondary {
+      background: #2d2d2d;
+      border: 1px solid var(--border);
+    }
+    button.secondary:hover { background: #3a3a3a; }
+    .output-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 0.5rem;
+    }
+    .badge {
+      background: var(--green);
+      color: #000;
+      padding: 0.2rem 0.7rem;
+      border-radius: 12px;
+      font-size: 0.8rem;
+      font-weight: bold;
+    }
+    .note {
+      font-size: 0.85rem;
+      color: #888;
+      text-align: center;
+    }
+  </style>
 </head>
 <body>
-
 <div class="container">
-    <h2>Script Name Extractor</h2>
-    
-    <div class="input-group">
-        <label>1. Unggah File atau Paste Teks:</label>
-        <input type="file" id="fileInput" accept=".txt">
-        <textarea id="inputText" placeholder="Paste isi file script list di sini..."></textarea>
-    </div>
+  <h1>📦 Ekstrak Module require()</h1>
+  <p class="note">Tempel kode Lua hasil dekompilasi, lalu klik <strong>Generate</strong> untuk mendapatkan daftar modul yang di‑<em>require</em>.</p>
 
-    <div class="controls">
-        <button class="btn-primary" onclick="processText()">Ekstrak Nama Script</button>
-        <button class="btn-copy" onclick="copyResult()">Salin Hasil</button>
-        <button class="btn-clear" onclick="clearAll()">Reset</button>
-    </div>
+  <!-- Input -->
+  <div>
+    <textarea id="inputCode" rows="14" placeholder="Paste script Lua di sini..."></textarea>
+  </div>
 
-    <div class="input-group">
-        <label>2. Format Output (Hanya Nama):</label>
-        <textarea id="outputText" readonly placeholder="Hasil akan muncul di sini..."></textarea>
+  <!-- Tombol -->
+  <div class="btn-group">
+    <button id="generateBtn">⚡ Generate</button>
+    <button id="clearBtn" class="secondary">🗑️ Clear</button>
+  </div>
+
+  <!-- Output -->
+  <div>
+    <div class="output-header">
+      <span style="font-weight: 600;">📋 Hasil Ekstraksi</span>
+      <span id="countBadge" class="badge">0 modul</span>
     </div>
+    <textarea id="outputArea" rows="10" readonly placeholder="Daftar modul akan muncul di sini..."></textarea>
+  </div>
+
+  <!-- Copy -->
+  <button id="copyBtn">📄 Copy ke Clipboard</button>
+
+  <p class="note" style="margin-top:1rem;">Regex mendeteksi: <code>require("...")</code>, <code>require('...')</code>, dan <code>require "..."</code></p>
 </div>
 
 <script>
-    // Fungsi utama memproses teks
-    function processText() {
-        const input = document.getElementById('inputText').value;
-        const lines = input.split('\n');
-        let results = [];
+  (function() {
+    // Elemen
+    const inputCode = document.getElementById('inputCode');
+    const outputArea = document.getElementById('outputArea');
+    const countBadge = document.getElementById('countBadge');
+    const generateBtn = document.getElementById('generateBtn');
+    const clearBtn = document.getElementById('clearBtn');
+    const copyBtn = document.getElementById('copyBtn');
 
-        lines.forEach(line => {
-            // Regex untuk mengambil teks di antara ] dan -->
-            // Contoh: [LocalScript] MyScript --> Workspace...
-            // Hasil: MyScript
-            const match = line.match(/\]\s*(.*?)\s*-->/);
-            
-            if (match && match[1]) {
-                const scriptName = match[1].trim();
-                if (scriptName) {
-                    results.push(scriptName);
-                }
-            }
-        });
-
-        document.getElementById('outputText').value = results.join('\n');
+    /**
+     * Ekstrak semua string yang di-require.
+     * Menangani:
+     *   require("module")
+     *   require('module')
+     *   require "module"   (jarang, tapi kadang ada)
+     *   require( ... ) dengan whitespace bebas.
+     */
+    function extractModules(code) {
+      // Regex dengan dua alternatif:
+      // 1. require(...) dengan tanda kurung, string di dalamnya
+      // 2. require "..." atau require '...' tanpa kurung
+      const regex = /require\s*\(\s*(?:"([^"]*)"|'([^']*)')\s*\)|require\s+(?:"([^"]*)"|'([^']*)')/g;
+      const modules = [];
+      let match;
+      while ((match = regex.exec(code)) !== null) {
+        // match[1] = petik ganda dalam kurung
+        // match[2] = petik tunggal dalam kurung
+        // match[3] = petik ganda tanpa kurung
+        // match[4] = petik tunggal tanpa kurung
+        const modName = match[1] || match[2] || match[3] || match[4];
+        if (modName && modules.indexOf(modName) === -1) {
+          modules.push(modName);
+        }
+      }
+      return modules;
     }
 
-    // Membaca file jika diunggah
-    document.getElementById('fileInput').addEventListener('change', function(e) {
-        const file = e.target.files[0];
-        if (!file) return;
-        
-        const reader = new FileReader();
-        reader.onload = function(e) {
-            document.getElementById('inputText').value = e.target.result;
-            processText(); // Langsung proses setelah upload
-        };
-        reader.readAsText(file);
-    });
+    function generateOutput() {
+      const code = inputCode.value.trim();
+      if (code === '') {
+        outputArea.value = '⚠️ Masukkan kode Lua terlebih dahulu.';
+        countBadge.textContent = '0 modul';
+        return;
+      }
+      const mods = extractModules(code);
+      if (mods.length === 0) {
+        outputArea.value = '❌ Tidak ditemukan modul dengan require().';
+        countBadge.textContent = '0 modul';
+      } else {
+        // Buat daftar bernomor
+        const lines = mods.map((mod, idx) => `${idx + 1}. ${mod}`);
+        outputArea.value = lines.join('\n');
+        countBadge.textContent = `${mods.length} modul`;
+      }
+    }
 
-    // Fungsi salin hasil
-    function copyResult() {
-        const output = document.getElementById('outputText');
-        output.select();
+    function copyOutput() {
+      const text = outputArea.value;
+      if (!text || text.startsWith('⚠️') || text.startsWith('❌')) {
+        alert('Tidak ada hasil untuk disalin.');
+        return;
+      }
+      navigator.clipboard.writeText(text).then(() => {
+        // Feedback sementara pada tombol
+        const originalText = copyBtn.innerHTML;
+        copyBtn.innerHTML = '✅ Tersalin!';
+        copyBtn.style.background = '#2e7d32';
+        setTimeout(() => {
+          copyBtn.innerHTML = originalText;
+          copyBtn.style.background = '';
+        }, 1500);
+      }).catch(() => {
+        // Fallback untuk browser lama
+        outputArea.select();
         document.execCommand('copy');
-        alert('Hasil berhasil disalin ke clipboard!');
+        alert('Disalin (fallback).');
+      });
     }
 
-    // Fungsi reset
     function clearAll() {
-        document.getElementById('inputText').value = '';
-        document.getElementById('outputText').value = '';
-        document.getElementById('fileInput').value = '';
+      inputCode.value = '';
+      outputArea.value = '';
+      countBadge.textContent = '0 modul';
     }
-</script>
 
+    // Event listeners
+    generateBtn.addEventListener('click', generateOutput);
+    clearBtn.addEventListener('click', clearAll);
+    copyBtn.addEventListener('click', copyOutput);
+
+    // Opsional: enter di input tidak submit form (hanya textarea)
+    inputCode.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter' && e.ctrlKey) {
+        e.preventDefault();
+        generateOutput();
+      }
+    });
+  })();
+</script>
 </body>
 </html>
