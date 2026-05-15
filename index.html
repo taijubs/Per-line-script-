@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Ekstrak Modul require() - Lua Script</title>
+  <title>Ekstrak Nama Module require()</title>
   <style>
     :root {
       --bg: #0f0f0f;
@@ -97,12 +97,23 @@
       color: #888;
       text-align: center;
     }
+    .example-btn {
+      background: transparent;
+      border: 1px dashed #555;
+      color: #aaa;
+      font-size: 0.8rem;
+      padding: 0.3rem 0.8rem;
+      cursor: pointer;
+    }
   </style>
 </head>
 <body>
 <div class="container">
-  <h1>📦 Ekstrak Module require()</h1>
-  <p class="note">Tempel kode Lua hasil dekompilasi, lalu klik <strong>Generate</strong> untuk mendapatkan daftar modul yang di‑<em>require</em>.</p>
+  <h1>📦 Nama Module require()</h1>
+  <p class="note">
+    Ekstrak <strong>nama module</strong> dari kode Lua (seperti hasil dekompilasi).<br>
+    Mendeteksi <code>require(…:WaitForChild("NamaModule"))</code> dan juga string biasa.
+  </p>
 
   <!-- Input -->
   <div>
@@ -113,59 +124,129 @@
   <div class="btn-group">
     <button id="generateBtn">⚡ Generate</button>
     <button id="clearBtn" class="secondary">🗑️ Clear</button>
+    <button id="exampleBtn" class="example-btn">📋 Contoh (dari script tadi)</button>
   </div>
 
   <!-- Output -->
   <div>
     <div class="output-header">
-      <span style="font-weight: 600;">📋 Hasil Ekstraksi</span>
+      <span style="font-weight: 600;">📋 Nama Module</span>
       <span id="countBadge" class="badge">0 modul</span>
     </div>
-    <textarea id="outputArea" rows="10" readonly placeholder="Daftar modul akan muncul di sini..."></textarea>
+    <textarea id="outputArea" rows="10" readonly placeholder="Nama module akan muncul di sini, satu per baris..."></textarea>
   </div>
 
   <!-- Copy -->
   <button id="copyBtn">📄 Copy ke Clipboard</button>
-
-  <p class="note" style="margin-top:1rem;">Regex mendeteksi: <code>require("...")</code>, <code>require('...')</code>, dan <code>require "..."</code></p>
 </div>
 
 <script>
   (function() {
-    // Elemen
     const inputCode = document.getElementById('inputCode');
     const outputArea = document.getElementById('outputArea');
     const countBadge = document.getElementById('countBadge');
     const generateBtn = document.getElementById('generateBtn');
     const clearBtn = document.getElementById('clearBtn');
     const copyBtn = document.getElementById('copyBtn');
+    const exampleBtn = document.getElementById('exampleBtn');
+
+    // Contoh input langsung dari script decompile yang kamu kirim (ringkasan)
+    const exampleCode = `-- Decompiled with x2125.xyz
+local Players = game:GetService("Players")
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local RunService = game:GetService("RunService")
+local SoundService = game:GetService("SoundService")
+local Workspace = game:GetService("Workspace")
+local Debris = game:GetService("Debris")
+local Events = ReplicatedStorage:WaitForChild("Events")
+local FootballShotRequest = Events:WaitForChild("FootballShotRequest")
+local FootballShotResult = Events:WaitForChild("FootballShotResult")
+local FootballSwipeShotRequest = Events:WaitForChild("FootballSwipeShotRequest")
+local FootballSwipeInput = require(script.Parent:WaitForChild("FootballSwipeInput"))
+local FootballSwipeConfig = require(ReplicatedStorage:WaitForChild("FootballSwipeConfig"))
+local FootballManualSwipeBoostHud = require(script.Parent:WaitForChild("FootballManualSwipeBoostHud"))
+local FootballManualShotQueue = require(script.Parent:WaitForChild("FootballManualShotQueue"))
+local PerfectShotKickClient = require(script.Parent:WaitForChild("PerfectShotKickClient"))
+local FootballCriticalHitText = require(script.Parent:WaitForChild("FootballCriticalHitText"))
+local FootballAimHereLabel = require(script.Parent:WaitForChild("FootballAimHereLabel"))
+local FootballPitchReskin = Events:WaitForChild("FootballPitchReskin")
+local FootballGoalRewardUpdated = Events:WaitForChild("FootballGoalRewardUpdated")
+local BallKick = SoundService:WaitForChild("SFX"):WaitForChild("BallKick")
+local Block = SoundService:WaitForChild("SFX"):WaitForChild("Block")
+local Outside = SoundService:WaitForChild("SFX"):WaitForChild("Outside")
+local Score = SoundService:WaitForChild("SFX"):WaitForChild("Score")
+Block.Volume = 0.45
+Outside.Volume = 0.45
+local HideUIClientsideEvent = Events:WaitForChild("HideUIClientsideEvent")
+local ShowUIClientsideEvent = Events:WaitForChild("ShowUIClientsideEvent")
+local FootballShopData = require(ReplicatedStorage:WaitForChild("FootballShopData"))
+local FootballFieldCenters = require(ReplicatedStorage:WaitForChild("FootballFieldCenters"))
+local FootballLuckyBlockGoalConfig = require(ReplicatedStorage:WaitForChild("FootballLuckyBlockGoalConfig"))
+local FootballGoalieBigVariant = require(ReplicatedStorage:WaitForChild("FootballGoalieBigVariant"))
+local FootballKickSlots = require(ReplicatedStorage:WaitForChild("FootballKickSlots"))
+local FootballShotRestingSpots = require(script.Parent:WaitForChild("FootballShotRestingSpots"))
+local FootballSlotClaim = Events:WaitForChild("FootballSlotClaim")
+local FootballSlotRelease = Events:WaitForChild("FootballSlotRelease")
+local FootballPitchState = ReplicatedStorage:WaitForChild("FootballPitchState")
+local function getKickAssignModeFromABTest() --[[ Line: 47 ]]
+	return ReplicatedStorage:WaitForChild("Functions"):WaitForChild("GetABTestData"):InvokeServer("KickAssignMode")
+end`;
+
+    // Masukkan contoh ketika tombol diklik
+    exampleBtn.addEventListener('click', () => {
+      inputCode.value = exampleCode;
+      outputArea.value = '';
+      countBadge.textContent = '0 modul';
+    });
 
     /**
-     * Ekstrak semua string yang di-require.
-     * Menangani:
-     *   require("module")
-     *   require('module')
-     *   require "module"   (jarang, tapi kadang ada)
-     *   require( ... ) dengan whitespace bebas.
+     * Ekstrak nama module.
+     * Prioritas:
+     * 1. require(…:WaitForChild("NamaModule")) → ambil NamaModule
+     * 2. require("…") / require('…') → ambil komponen terakhir (setelah / atau .)
      */
-    function extractModules(code) {
-      // Regex dengan dua alternatif:
-      // 1. require(...) dengan tanda kurung, string di dalamnya
-      // 2. require "..." atau require '...' tanpa kurung
-      const regex = /require\s*\(\s*(?:"([^"]*)"|'([^']*)')\s*\)|require\s+(?:"([^"]*)"|'([^']*)')/g;
-      const modules = [];
+    function extractModuleNames(code) {
+      const names = [];
+      const seen = new Set();
+
+      // Pola 1: require(...:WaitForChild("...") atau WaitForChild('...')
+      const waitForChildRegex = /require\s*\(\s*[^)]*:WaitForChild\s*\(\s*(["'])(.+?)\1\s*\)\s*\)/g;
       let match;
-      while ((match = regex.exec(code)) !== null) {
-        // match[1] = petik ganda dalam kurung
-        // match[2] = petik tunggal dalam kurung
-        // match[3] = petik ganda tanpa kurung
-        // match[4] = petik tunggal tanpa kurung
-        const modName = match[1] || match[2] || match[3] || match[4];
-        if (modName && modules.indexOf(modName) === -1) {
-          modules.push(modName);
+      while ((match = waitForChildRegex.exec(code)) !== null) {
+        const name = match[2]; // string di dalam WaitForChild
+        if (!seen.has(name)) {
+          seen.add(name);
+          names.push(name);
         }
       }
-      return modules;
+
+      // Pola 2: require("...") atau require('...') – fallback, ambil nama terakhir
+      const stringRequireRegex = /require\s*\(\s*(["'])(.+?)\1\s*\)/g;
+      while ((match = stringRequireRegex.exec(code)) !== null) {
+        let fullPath = match[2];
+        // Ambil bagian terakhir setelah pemisah
+        let shortName = fullPath.split(/[\/.]/).pop(); // Ambil setelah / atau .
+        // Hapus karakter yang bukan identifier (jarang terjadi)
+        shortName = shortName.replace(/[^a-zA-Z0-9_]/g, '');
+        if (shortName && !seen.has(shortName)) {
+          seen.add(shortName);
+          names.push(shortName);
+        }
+      }
+
+      // Pola 3: require "..." atau require '...' (tanpa kurung)
+      const bareRequireRegex = /require\s+(["'])(.+?)\1/g;
+      while ((match = bareRequireRegex.exec(code)) !== null) {
+        let fullPath = match[2];
+        let shortName = fullPath.split(/[\/.]/).pop();
+        shortName = shortName.replace(/[^a-zA-Z0-9_]/g, '');
+        if (shortName && !seen.has(shortName)) {
+          seen.add(shortName);
+          names.push(shortName);
+        }
+      }
+
+      return names;
     }
 
     function generateOutput() {
@@ -175,9 +256,9 @@
         countBadge.textContent = '0 modul';
         return;
       }
-      const mods = extractModules(code);
+      const mods = extractModuleNames(code);
       if (mods.length === 0) {
-        outputArea.value = '❌ Tidak ditemukan modul dengan require().';
+        outputArea.value = '❌ Tidak ditemukan module yang di‑require.';
         countBadge.textContent = '0 modul';
       } else {
         // Buat daftar bernomor
@@ -194,16 +275,14 @@
         return;
       }
       navigator.clipboard.writeText(text).then(() => {
-        // Feedback sementara pada tombol
-        const originalText = copyBtn.innerHTML;
+        const origHTML = copyBtn.innerHTML;
         copyBtn.innerHTML = '✅ Tersalin!';
         copyBtn.style.background = '#2e7d32';
         setTimeout(() => {
-          copyBtn.innerHTML = originalText;
+          copyBtn.innerHTML = origHTML;
           copyBtn.style.background = '';
         }, 1500);
       }).catch(() => {
-        // Fallback untuk browser lama
         outputArea.select();
         document.execCommand('copy');
         alert('Disalin (fallback).');
@@ -216,12 +295,11 @@
       countBadge.textContent = '0 modul';
     }
 
-    // Event listeners
     generateBtn.addEventListener('click', generateOutput);
     clearBtn.addEventListener('click', clearAll);
     copyBtn.addEventListener('click', copyOutput);
 
-    // Opsional: enter di input tidak submit form (hanya textarea)
+    // Ctrl+Enter untuk generate
     inputCode.addEventListener('keydown', (e) => {
       if (e.key === 'Enter' && e.ctrlKey) {
         e.preventDefault();
